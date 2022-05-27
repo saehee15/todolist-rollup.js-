@@ -1,0 +1,1 @@
+"use strict";!function(e){if(!e)return;if("undefined"==typeof window)return;const n=document.createElement("style");n.setAttribute("type","text/css"),n.innerHTML=e,document.head.appendChild(n)}(".container {\n  width: 100px;\n  height: 100px;\n  background-color: greenyellow;\n}");consol.log(3e3);
