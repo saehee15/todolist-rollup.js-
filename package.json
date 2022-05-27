@@ -4,13 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-   "start":"rollup -c rollup.dev.config.js -w",
-   "build":"rollup -c rollup.prod.config.js"
+    "start": "rollup -c rollup.dev.config.js -w",
+    "build": "rollup -c rollup.prod.config.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "eslint": "^8.16.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "2.6.2",
     "rollup": "^2.75.0",
     "rollup-plugin-generate-html-template": "^1.7.0",
     "rollup-plugin-livereload": "^2.0.5",
