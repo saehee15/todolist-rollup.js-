@@ -1,6 +1,7 @@
   // 공통
   import htmlTemplate from 'rollup-plugin-generate-html-template';
   import scss from 'rollup-plugin-scss';
+  import { nodeResolve } from '@rollup/plugin-node-resolve';
 
   export default {
       input: 'src/js/index.js',
@@ -10,6 +11,7 @@
           souremap: true
       },
       plugins: [
+          nodeResolve(),
           scss({
               insert: true,
               sourceMap: true
