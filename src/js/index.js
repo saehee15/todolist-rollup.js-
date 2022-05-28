@@ -15,7 +15,23 @@ class TodoList {
         this.todoListEl = this.todoContainerEl.querySelector('#todo-list');
     }
     addEvent(){
-        this.addBtnEl.addEventListener('click',this.onClickAddBtn.bind(this))
+        this.addBtnEl.addEventListener('click',this.onClickAddBtn.bind(this));
+        this.todoListEl.addEventListener('click', this.onClickTodoList.bind(this));
+    }
+
+    onClickTodoList(event){
+        const {target} =event;
+        const btn = target.closest('button');
+        if(btn.matches('#delete-btn')){
+            this.deleteTodo(target);
+        }
+    }
+    deleteTodo(target){
+        const todoDiv = target.closest('.todo');
+        todoDiv.addEventListener('transitionend',()=>{
+            todoDiv.remove();
+        }); // transition 되면 돔 구조에서 완전 삭제, 이 코드 없으면 눈에서만 안 보이는거임
+        todoDiv.classList.add('delete');
     }
     onClickAddBtn(){
         if(this.todoInputEl.value.length === 0){
