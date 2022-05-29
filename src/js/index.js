@@ -1,22 +1,92 @@
 import "../scss/style.scss"
 import "@fortawesome/fontawesome-free/js/all.min.js"
 
+
+// 라우터 클래스 생성
+class Router{
+    routes = [];
+
+    notFoundCallback = () => {};
+    addRoute(url, callback){
+        this.routes.push({
+            url,
+            callback
+        });
+        return this; // 해당 인스턴스를 리턴해줘야 매소드체이닝 가능
+    }
+    checkRoute(){
+        const currentRoute = this.routes.find(
+            (route)=> route.url === window.location.hash);
+
+        if(!currentRoute){
+            this.notFoundCallback();
+            return;
+        }   
+        currentRoute.callback();
+    }
+
+    init(){
+        window.addEventListener('hashchange',this.checkRoute.bind(this));
+        if(!window.location.hash){
+            window.location.hash ='#/';
+        }
+        this.checkRoute();
+    }
+    setNotFound(callback){
+        this.notFoundCallback = callback;
+        return this;
+    }
+}
+
 class TodoList {
     constructor(){
         this.assignElement();
         this.addEvent();
     }
     assignElement(){
-        this.inputContainerEl = document.getElementById("input-container");
-        this.inputAreaEl = this.inputContainerEl.querySelector("#input-area");
+        this.inputContainerEl = document.getElementById('input-container');
+        this.inputAreaEl = this.inputContainerEl.querySelector('#input-area');
         this.todoInputEl = this.inputAreaEl.querySelector('#todo-input');
-        this.addBtnEl = this.inputAreaEl.querySelector("#add-btn");
+        this.addBtnEl = this.inputAreaEl.querySelector('#add-btn');
         this.todoContainerEl = document.getElementById('todo-container');
         this.todoListEl = this.todoContainerEl.querySelector('#todo-list');
+        //필터기능
+        this.radioAreaEl = this.inputContainerEl.querySelector('#radio-area')
+        this.filterRadioBtnEls = this.radioAreaEl.querySelectorAll('input[name="filter"]');
     }
     addEvent(){
         this.addBtnEl.addEventListener('click',this.onClickAddBtn.bind(this));
         this.todoListEl.addEventListener('click', this.onClickTodoList.bind(this));
+        this.addRadioBtnEvent();
+    }
+    addRadioBtnEvent(){
+        for (const filterRadioBtnEl of this.filterRadioBtnEls){
+            filterRadioBtnEl.addEventListener('click',this.onClickRadioBtn.bind(this));
+        }
+    }
+    onClickRadioBtn(event){
+        const {value} = event.target;
+        // console.log(value);
+        // this.filterTodo(value);
+        window.location.href = `#/${value.toLowerCase()}`;
+    }
+    filterTodo(status){
+        const todoDivEls = this.todoListEl.querySelectorAll('div.todo');
+        for(const todoDivEl of todoDivEls){
+            switch(status){
+                case 'ALL':
+                    todoDivEl.style.display = 'flex';
+                    break;
+                case 'DONE':
+                    todoDivEl.style.display = todoDivEl.classList.contains('done')
+                    ? 'flex' : 'none';
+                    break;
+                case 'TODO':
+                    todoDivEl.style.display = todoDivEl.classList.contains('done')
+                    ? 'none' : 'flex';
+                    break;
+            }
+        } 
     }
 
     onClickTodoList(event){
@@ -106,5 +176,18 @@ class TodoList {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    const router = new Router();
     const todoList = new TodoList();
+    //크로져? 함수가 함수 리턴?
+    const routeCallback = (status) => () => {
+        todoList.filterTodo(status);
+        document.querySelector(`input[type='radio'][value='${status}']`,
+        ).checked = true;
+    }
+    router
+    .addRoute('#/all', routeCallback('ALL'))
+    .addRoute('#/todo', routeCallback('TODO'))
+    .addRoute('#/done', routeCallback('DONE'))
+    .setNotFound(routeCallback('ALL'))
+    .init();
 });
