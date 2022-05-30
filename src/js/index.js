@@ -38,10 +38,52 @@ class Router{
     }
 }
 
+class Storage{
+    saveTodo(id, todoContent){
+        const todoData = this.getTodos();
+        todoData.push({id, conntent: todoContent, status: 'TODO'});
+        localStorage.setItem('todos', JSON.stringify(todoData)) // object형태로 저장할수 없고, string형태로 저장해야 하기 때문에 stringify
+    }
+    editTodo(id, todoContent, status = 'TODO'){
+        const todosData = this.getTodos();
+        const todoIndex = todosData.findIndex((todo) => todo.id == id);
+        const targetTodoData = todosData[todoIndex];
+        const editedTodoData = todoContent === '' ? {...targetTodoData, status} : {...targetTodoData, content: todoContent}
+        todosData.splice(todoIndex,1, editedTodoData);
+        localStorage.setItem('todos', JSON.stringify(todosData));
+    }
+    deleteTodo(id){
+        const todosData = this.getTodos();
+        todosData.splice(todosData.findIndex((todo) => todo.id == id),1)
+        localStorage.setItem('todos', JSON.stringify(todosData));
+    }
+    getTodos(){
+        return localStorage.getItem("todos") === null ? []: JSON.parse(localStorage.getItem('todos')); //키값이 todos
+    }
+
+
+}
+
 class TodoList {
-    constructor(){
+    //클래스 변수들
+    storage;
+    inputContainerEl;
+    inputAreaEl;
+    todoInputEl;
+    addBtnEl;
+    todoContainerEl;
+    todoListEl;
+    radioAreaEl;
+    filterRadioBtnEls;
+
+    constructor(storage){    //constructor(// 여기서 new Storage를 받음)
+        this.initStorage(storage)
         this.assignElement();
         this.addEvent();
+        this.loadSaveData();
+    }
+    initStorage(storage){   //constructor로 받은 애를 클래스의 변수로 넣어준거
+        this.storage = storage;
     }
     assignElement(){
         this.inputContainerEl = document.getElementById('input-container');
@@ -59,6 +101,15 @@ class TodoList {
         this.todoListEl.addEventListener('click', this.onClickTodoList.bind(this));
         this.addRadioBtnEvent();
     }
+    // 로컬스토리지 저장된 데이터 불러오는 메소드
+    loadSaveData(){
+        const todosData = this.storage.getTodos()
+        for(const todoData of todosData){
+            const { id, content, status} = todoData;
+            this.createTodoElement(id, content, status);
+        }
+    }
+
     addRadioBtnEvent(){
         for (const filterRadioBtnEl of this.filterRadioBtnEls){
             filterRadioBtnEl.addEventListener('click',this.onClickRadioBtn.bind(this));
@@ -106,12 +157,16 @@ class TodoList {
     completeTodo(target){
         const todoDiv = target.closest('.todo');
         todoDiv.classList.toggle('done');
+        const {id} = todoDiv.dataset;
+        this.storage.editTodo(id,'',todoDiv.classList.contains('done')? 'DONE' : 'TODO');
     }
     saveTodo(target){
         const todoDiv = target.closest('.todo');
         todoDiv.classList.remove('edit');
         const todoInputEl = todoDiv.querySelector('input');
         todoInputEl.readOnly = true;
+        const {id} = todoDiv.dataset;
+        this.storage.editTodo(id, todoInputEl.value);
     }
     editTodo(target){
         const todoDiv = target.closest('.todo');
@@ -128,19 +183,27 @@ class TodoList {
             todoDiv.remove();
         }); // transition 되면 돔 구조에서 완전 삭제, 이 코드 없으면 눈에서만 안 보이는거임
         todoDiv.classList.add('delete');
+        this.storage.deleteTodo(todoDiv.dataset.id);
     }
     onClickAddBtn(){
         if(this.todoInputEl.value.length === 0){
             alert('내용을 입력해주세요.');
             return;
         }
-        this.createTodoElement(this.todoInputEl.value)
+        const id = Date.now(); //현재시간을 밀리세컨드로 단위로 리턴, 유니크해서 id로 지정
+        this.storage.saveTodo(id, this.todoInputEl.value);
+
+        this.createTodoElement(id, this.todoInputEl.value)
     }
 
-    createTodoElement(value){
+    createTodoElement(id, value, status = null){
         const todoDiv = document.createElement('div');
         todoDiv.classList.add('todo');
+        if(status === 'DONE'){
+            todoDiv.classList.add('done');
+        }
 
+        todoDiv.dataset.id = id;
         const todoContent = document.createElement('input');
         todoContent.value = value;
         todoContent.readOnly = true;
@@ -177,7 +240,7 @@ class TodoList {
 
 document.addEventListener('DOMContentLoaded', () => {
     const router = new Router();
-    const todoList = new TodoList();
+    const todoList = new TodoList(new Storage());
     //크로져? 함수가 함수 리턴?
     const routeCallback = (status) => () => {
         todoList.filterTodo(status);
